@@ -72,11 +72,7 @@ document.getElementById('resetFilter').addEventListener('click', () => {
   renderGallery();
 });
 
-function renderGallery() {
-  errorEl.textContent = '';
-  galleryEl.innerHTML = '';
-
-  // Валидация всех картинок
+function validateGallery(){
   for (const img of images) {
     const err = validateImage(img);
     if (err) {
@@ -85,6 +81,14 @@ function renderGallery() {
       return;
     }
   }
+};
+
+function renderGallery() {
+  errorEl.textContent = '';
+  galleryEl.innerHTML = '';
+
+  // Валидация всех картинок
+  validateGallery();
 
   let filteredImages = images;
   if (activeFilters.length > 0) {
