@@ -1,11 +1,11 @@
 const defaultImages = [
-  { id: '1', url: 'sources/природа1.jpg', title: 'Природа 1',tags:['природа','вода'] },
-  { id: '2', url: 'sources/природа2.jpg', title: 'Природа 2',tags:['природа','вода'] },
-  { id: '3', url: 'sources/природа3.jpg', title: 'Природа 3' ,tags:['природа','закат']},
-  {id:'4',url:'sources/город1.webp',title:'Город 1',tags:['город','вода','небоскрёбы','сша']},
-  {id:'5',url:'sources/город2.jpg',title:'Город 2',tags:['город','вода','небоскрёбы','сша']},
-  {id:'6',url:'sources/город3.jpg',title:'Город 3',tags:['город','вода','небоскрёбы','россия']},
-  {id:'6',url:'sources/город4.webp',title:'Город 4',tags:['город','архитектура','европа']},
+  { id: '1', url: 'sources/природа1.jpg', title: 'Природа 1',tags:['природа','вода'] , hidden: false},
+  { id: '2', url: 'sources/природа2.jpg', title: 'Природа 2',tags:['природа','вода'], hidden: false },
+  { id: '3', url: 'sources/природа3.jpg', title: 'Природа 3' ,tags:['природа','закат'], hidden: false},
+  {id:'4',url:'sources/город1.webp',title:'Город 1',tags:['город','вода','небоскрёбы','сша'], hidden: false},
+  {id:'5',url:'sources/город2.jpg',title:'Город 2',tags:['город','вода','небоскрёбы','сша'], hidden: false},
+  {id:'6',url:'sources/город3.jpg',title:'Город 3',tags:['город','вода','небоскрёбы','россия'], hidden: false},
+  {id:'6',url:'sources/город4.webp',title:'Город 4',tags:['город','архитектура','европа'], hidden: false},
 ];
 
 let activeFilters = [];
@@ -90,7 +90,7 @@ function renderGallery() {
   // Валидация всех картинок
   validateGallery();
 
-  let filteredImages = images;
+  let filteredImages = images.filter(img => !img.hidden);
   if (activeFilters.length > 0) {
     filteredImages = images.filter(img => {
       if (!img.tags || !Array.isArray(img.tags)) return false;
