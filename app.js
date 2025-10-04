@@ -5,7 +5,7 @@ const defaultImages = [
   {id:'4',url:'sources/город1.webp',title:'Город 1',tags:['город','вода','небоскрёбы','сша'], hidden: false},
   {id:'5',url:'sources/город2.jpg',title:'Город 2',tags:['город','вода','небоскрёбы','сша'], hidden: false},
   {id:'6',url:'sources/город3.jpg',title:'Город 3',tags:['город','вода','небоскрёбы','россия'], hidden: false},
-  {id:'6',url:'sources/город4.webp',title:'Город 4',tags:['город','архитектура','европа'], hidden: false},
+  {id:'7',url:'sources/город4.webp',title:'Город 4',tags:['город','архитектура','европа'], hidden: false},
 ];
 
 let activeFilters = [];
@@ -92,7 +92,7 @@ function renderGallery() {
 
   let filteredImages = images.filter(img => !img.hidden);
   if (activeFilters.length > 0) {
-    filteredImages = images.filter(img => {
+    filteredImages = filteredImages.filter(img => {
       if (!img.tags || !Array.isArray(img.tags)) return false;
       return activeFilters.some(tag => img.tags.includes(tag));
     });
@@ -146,7 +146,8 @@ document.getElementById('prevPage').addEventListener('click', () => {
 });
 
 document.getElementById('nextPage').addEventListener('click', () => {
-  const totalPages = Math.ceil(images.length / itemsPerPage);
+  const visibleImages = images.filter(img => !img.hidden);
+  const totalPages = Math.ceil(visibleImages.length / itemsPerPage);
   if (currentPage < totalPages) {
     currentPage++;
     renderGallery();
