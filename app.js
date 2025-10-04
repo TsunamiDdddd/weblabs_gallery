@@ -13,7 +13,7 @@ let activeFilters = [];
 let itemsPerPage = parseInt(document.getElementById('itemsPerPage').value, 10);
 
 // Загрузка картинок из localStorage или установка дефолтных
-let images = JSON.parse(localStorage.getItem('images'));
+let images = JSON.parse(localStorage.getItem('images'))|| defaultImages;
 
 
 let ratings = JSON.parse(localStorage.getItem('ratings')) || {};
@@ -38,20 +38,18 @@ function validateImage(img) {
 }
 
 document.getElementById('refreshGallery').addEventListener('click', () => {
-  // Перезаписываем localStorage новыми данными из defaultImages
-  localStorage.setItem('images', JSON.stringify(defaultImages));
+  
 
 
   localStorage.setItem('ratings', JSON.stringify(ratings));
 
-  // Обновляем переменную images и текущую страницу
-  images = defaultImages;
+
   currentPage = 1;
 
   // Перерисовываем галерею
   renderGallery();
 
-  console.log('Галерея обновлена из defaultImages');
+  console.log('Галерея обновлена');
 });
 
 document.querySelectorAll('.filter-checkbox').forEach(cb => {
