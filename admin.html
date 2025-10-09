@@ -3,36 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Админ панель - Галерея</title>
-    <link rel="stylesheet" href="adminstyle.css">
+    <title>Управление изображениями</title>
+    <link rel="stylesheet" href="admin.css">
 </head>
 <body>
-    <div class="admin-header">
-        <h1>Административная панель</h1>
-        <button class="back-btn" onclick="window.location.href='index.html'">← Назад к галерее</button>
-    </div>
-
-    <div class="stats">
-        <h3>Статистика:</h3>
-        <p id="totalImages">Всего картинок: 0</p>
-        <p id="visibleImages">Видимых: 0</p>
-        <p id="hiddenImages">Скрытых: 0</p>
-    </div>
-
-    <div class="admin-controls">
-        <input type="text" id="searchInput" class="search-box" placeholder="Поиск по названию..." oninput="filterImages()">
-        
-        <div class="tag-filter" id="tagFilter">
+    <div class="container">
+        <div class="header">
+            <h1>🎨 Управление изображениями</h1>
+            <p>Добавляйте, редактируйте и управляйте вашей коллекцией изображений</p>
+            <div class="nav">
+                <a href="index.html" class="nav-btn">🏠 Главная</a>
+            </div>
         </div>
 
-        <button onclick="addNewImage()">+ Добавить новую картинку</button>
+        <div class="content">
+            <!-- Статистика -->
+            <div class="stats" id="statsSection">
+                <div class="stat-card">
+                    <h3>Всего изображений</h3>
+                    <div class="number" id="totalImages">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Видимых</h3>
+                    <div class="number" id="visibleImages">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Скрытых</h3>
+                    <div class="number" id="hiddenImages">0</div>
+                </div>
+            </div>
+
+            <!-- Уведомления -->
+            <div class="alert" id="alertMessage"></div>
+
+            <!-- Форма добавления/редактирования -->
+            <div class="section">
+                <h2 id="formTitle">➕ Добавить новое изображение</h2>
+                <form id="imageForm">
+                    <input type="hidden" id="editId">
+                    
+                    <div class="form-group">
+                        <label for="imageTitle">Название изображения *</label>
+                        <input type="text" id="imageTitle" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Источник изображения</label>
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <button type="button" class="btn btn-primary" onclick="showUrlInput()">🔗 По URL</button>
+                            <button type="button" class="btn btn-success" onclick="showFileInput()">📁 Загрузить файл</button>
+                        </div>
+                        
+                        <div id="urlInput" style="display: none;">
+                            <input type="url" id="imageUrl" class="form-control" placeholder="https://example.com/image.jpg">
+                        </div>
+                        
+                        <div id="fileInput" style="display: none;">
+                            <div class="upload-area" onclick="document.getElementById('fileUpload').click()">
+                                <p>📁 Нажмите для выбора файла или перетащите сюда</p>
+                                <input type="file" id="fileUpload" accept="image/*" style="display: none;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Предпросмотр</label>
+                        <img id="imagePreview" class="image-preview" alt="Предпросмотр">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="imageTags">Теги (через запятую)</label>
+                        <input type="text" id="imageTags" class="form-control" placeholder="природа, закат, вода">
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="imageHidden"> Скрыть изображение
+                        </label>
+                    </div>
+
+                    <div style="display: flex; gap: 10px;">
+                        <button type="submit" class="btn btn-primary" id="submitBtn">Добавить изображение</button>
+                        <button type="button" class="btn btn-danger" onclick="resetForm()" style="display: none;" id="cancelBtn">Отмена</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Поиск и фильтры -->
+            <div class="section">
+                <h2>🔍 Поиск и фильтрация</h2>
+                <div class="search-box">
+                    <input type="text" id="searchInput" class="form-control" placeholder="Поиск по названию...">
+                </div>
+                <div id="tagFilter" class="tag-list"></div>
+            </div>
+
+            <!-- Список изображений -->
+            <div class="section">
+                <h2>🖼️ Все изображения</h2>
+                <div class="images-grid" id="imagesGrid"></div>
+            </div>
+        </div>
     </div>
 
-    <div class="admin-gallery" id="adminGallery">
-    </div>
-
-    <script src="admin.js">
-        
+    <script src = "admin.js">
     </script>
 </body>
 </html>
