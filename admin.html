@@ -5,14 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Управление изображениями</title>
     <link rel="stylesheet" href="admin.css">
+
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>🎨 Управление изображениями</h1>
-            <p>Добавляйте, редактируйте и управляйте вашей коллекцией изображений</p>
+            <p>Диаграммы рейтингов, сортировка и управление коллекцией</p>
             <div class="nav">
                 <a href="index.html" class="nav-btn">🏠 Главная</a>
+                <a href="admin.html" class="nav-btn">⚙️ Админ-панель</a>
             </div>
         </div>
 
@@ -30,6 +32,71 @@
                 <div class="stat-card">
                     <h3>Скрытых</h3>
                     <div class="number" id="hiddenImages">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Общий рейтинг</h3>
+                    <div class="number" id="totalRating">0</div>
+                </div>
+            </div>
+
+            <!-- Диаграмма рейтингов -->
+            <div class="section">
+                <div class="section-header" onclick="toggleRatingsChart()">
+                    <h2>📊 Диаграмма рейтингов</h2>
+                    <span class="collapse-icon" id="collapseIcon">▼</span>
+                </div>
+                
+                <div class="section-content" id="ratingsChartContent">
+                    <!-- Элементы управления сортировкой -->
+                    <div class="sort-controls">
+                        <select id="sortBy" class="sort-select">
+                            <option value="total">Сортировка по общему рейтингу</option>
+                            <option value="likes">По лайкам (убывание)</option>
+                            <option value="dislikes">По дизлайкам (убывание)</option>
+                            <option value="ratio">По соотношению лайков</option>
+                            <option value="title">По названию (А-Я)</option>
+                            <option value="totalRatings">По количеству оценок</option>
+                        </select>
+
+                        <select id="filterByTag" class="sort-select">
+                            <option value="all">Все теги</option>
+                        </select>
+
+                        <button class="sort-btn active" onclick="toggleSortOrder()" id="sortOrderBtn">
+                            🔽 Убывание
+                        </button>
+
+                        <button class="btn btn-primary" onclick="refreshChart()">
+                            🔄 Обновить
+                        </button>
+                    </div>
+
+                    <!-- Легенда диаграммы -->
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <div class="legend-color legend-likes"></div>
+                            <span>Лайки 👍</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color legend-dislikes"></div>
+                            <span>Дизлайки 👎</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #6c757d;"></div>
+                            <span>Длина = количество оценок</span>
+                        </div>
+                    </div>
+
+                    <!-- Шкала масштаба -->
+                    <div class="chart-scale" id="chartScale">
+                        <span>0 оценок</span>
+                        <span id="maxRatings">0 оценок</span>
+                    </div>
+
+                    <!-- Контейнер для диаграммы -->
+                    <div class="ratings-chart" id="ratingsChart">
+                        <div class="no-data">Нет данных для отображения</div>
+                    </div>
                 </div>
             </div>
 
@@ -106,7 +173,6 @@
         </div>
     </div>
 
-    <script src = "admin.js">
-    </script>
+    <script src="admin.js"></script>
 </body>
 </html>

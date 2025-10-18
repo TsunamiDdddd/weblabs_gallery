@@ -1,4 +1,4 @@
-        * {
+* {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -12,7 +12,7 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             background: white;
             border-radius: 15px;
@@ -73,6 +73,243 @@
             font-size: 1.8em;
         }
 
+        /* Стили для сворачиваемого заголовка */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 10px;
+            margin: -10px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        .section-header:hover {
+            background-color: rgba(52, 152, 219, 0.1);
+        }
+
+        .collapse-icon {
+            font-size: 1.2em;
+            transition: transform 0.3s ease;
+            color: #3498db;
+        }
+
+        .collapse-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .section-content {
+            transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease, margin 0.3s ease;
+            max-height: 2000px;
+            opacity: 1;
+            overflow: hidden;
+        }
+
+        .section-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+
+        /* Стили для диаграммы рейтингов */
+        .ratings-chart {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .chart-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            transition: transform 0.2s ease;
+            cursor: pointer;
+        }
+
+        .chart-item:hover {
+            transform: translateX(5px);
+            background: #e9ecef;
+        }
+
+        .chart-image {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-right: 15px;
+        }
+
+        .chart-info {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .chart-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .chart-tags {
+            font-size: 0.8em;
+            color: #6c757d;
+        }
+
+        .chart-total {
+            font-size: 0.7em;
+            color: #6c757d;
+            margin-top: 2px;
+        }
+
+        /* Контейнер для диаграммы с изменяемой длиной */
+        .chart-bar-container {
+            flex: 2;
+            height: 30px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            margin: 0 20px;
+            display: flex;
+            align-items: center;
+            border: 1px solid #e9ecef;
+            position: relative;
+        }
+
+        .chart-bar {
+            height: 24px;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            transition: width 0.5s ease;
+            min-width: 5%;
+        }
+
+        .likes-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            transition: width 0.5s ease;
+        }
+
+        .dislikes-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #dc3545, #e83e8c);
+            transition: width 0.5s ease;
+        }
+
+        .chart-numbers {
+            min-width: 100px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .likes-count {
+            color: #28a745;
+        }
+
+        .dislikes-count {
+            color: #dc3545;
+        }
+
+        .rating-ratio {
+            font-size: 0.9em;
+            color: #6c757d;
+            margin-top: 2px;
+        }
+
+        /* Стили для сортировки */
+        .sort-controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .sort-select {
+            padding: 10px 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            background: white;
+            font-size: 14px;
+            min-width: 200px;
+        }
+
+        .sort-btn {
+            padding: 10px 20px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .sort-btn.active {
+            background: #3498db;
+        }
+
+        .sort-btn:hover {
+            background: #5a6268;
+        }
+
+        .sort-btn.active:hover {
+            background: #2980b9;
+        }
+
+        .chart-legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .legend-likes {
+            background: linear-gradient(90deg, #28a745, #20c997);
+        }
+
+        .legend-dislikes {
+            background: linear-gradient(90deg, #dc3545, #e83e8c);
+        }
+
+        .chart-scale {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            padding: 0 10px;
+            font-size: 0.8em;
+            color: #6c757d;
+            background: #f8f9fa;
+            border-radius: 5px;
+            padding: 5px 10px;
+        }
+
+        /* Остальные стили */
         .form-group {
             margin-bottom: 20px;
         }
@@ -260,6 +497,7 @@
             padding: 4px 8px;
             border-radius: 12px;
             font-size: 0.8em;
+            cursor: pointer;
         }
 
         .alert {
@@ -301,3 +539,12 @@
             background: #d1ecf1;
             border-color: #17a2b8;
         }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+          

@@ -1,12 +1,18 @@
+// Глобальные переменные
 let images = JSON.parse(localStorage.getItem('images')) || [];
 let ratings = JSON.parse(localStorage.getItem('ratings')) || {};
 let currentFilterTag = 'all';
 let isEditing = false;
+let sortBy = 'total';
+let sortOrder = 'desc';
+let chartFilterTag = 'all';
+let isChartCollapsed = false;
 
 // Инициализация
 document.addEventListener('DOMContentLoaded', function() {
     loadImages();
     setupEventListeners();
+    initChartState();
 });
 
 function setupEventListeners() {
@@ -26,12 +32,56 @@ function setupEventListeners() {
     
     // Форма
     document.getElementById('imageForm').addEventListener('submit', handleFormSubmit);
+    
+    // Сортировка
+    document.getElementById('sortBy').addEventListener('change', function(e) {
+        sortBy = e.target.value;
+        renderRatingsChart();
+    });
+    
+    document.getElementById('filterByTag').addEventListener('change', function(e) {
+        chartFilterTag = e.target.value;
+        renderRatingsChart();
+    });
+}
+
+function initChartState() {
+    // Загружаем состояние из localStorage при загрузке страницы
+    const savedState = localStorage.getItem('ratingsChartCollapsed');
+    if (savedState === 'true') {
+        isChartCollapsed = true;
+        document.getElementById('ratingsChartContent').classList.add('collapsed');
+        document.getElementById('collapseIcon').classList.add('collapsed');
+    }
+}
+
+function toggleRatingsChart() {
+    const content = document.getElementById('ratingsChartContent');
+    const icon = document.getElementById('collapseIcon');
+    
+    isChartCollapsed = !isChartCollapsed;
+    
+    if (isChartCollapsed) {
+        content.classList.add('collapsed');
+        icon.classList.add('collapsed');
+        // Сохраняем состояние в localStorage
+        localStorage.setItem('ratingsChartCollapsed', 'true');
+    } else {
+        content.classList.remove('collapsed');
+        icon.classList.remove('collapsed');
+        // Перерисовываем диаграмму при разворачивании
+        renderRatingsChart();
+        localStorage.setItem('ratingsChartCollapsed', 'false');
+    }
 }
 
 function loadImages() {
     updateStats();
     renderTagFilter();
     renderImagesGrid();
+    if (!isChartCollapsed) {
+        renderRatingsChart();
+    }
 }
 
 function updateStats() {
@@ -42,10 +92,20 @@ function updateStats() {
     document.getElementById('totalImages').textContent = total;
     document.getElementById('visibleImages').textContent = visible;
     document.getElementById('hiddenImages').textContent = hidden;
+    
+    updateTotalRating();
+}
+
+function updateTotalRating() {
+    const totalRating = Object.values(ratings).reduce((sum, rating) => {
+        return sum + (rating.likes - rating.dislikes);
+    }, 0);
+    document.getElementById('totalRating').textContent = totalRating;
 }
 
 function renderTagFilter() {
     const tagFilter = document.getElementById('tagFilter');
+    const filterByTag = document.getElementById('filterByTag');
     const allTags = new Set();
     
     images.forEach(img => {
@@ -54,6 +114,15 @@ function renderTagFilter() {
         }
     });
 
+    // Для фильтра тегов в диаграмме
+    filterByTag.innerHTML = `
+        <option value="all">Все теги</option>
+        ${Array.from(allTags).map(tag => `
+            <option value="${tag}" ${chartFilterTag === tag ? 'selected' : ''}>${tag}</option>
+        `).join('')}
+    `;
+
+    // Для основного фильтра тегов
     tagFilter.innerHTML = `
         <span class="tag" style="cursor: pointer; background: #27ae60;" 
                 onclick="setTagFilter('all')">Все</span>
@@ -69,6 +138,135 @@ function setTagFilter(tag) {
     renderImagesGrid();
 }
 
+function renderRatingsChart() {
+    const chart = document.getElementById('ratingsChart');
+    const scale = document.getElementById('chartScale');
+    
+    // Фильтруем изображения по тегу
+    let filteredImages = images.filter(img => !img.hidden);
+    if (chartFilterTag !== 'all') {
+        filteredImages = filteredImages.filter(img => 
+            img.tags && img.tags.includes(chartFilterTag)
+        );
+    }
+
+    if (filteredImages.length === 0) {
+        chart.innerHTML = '<div class="no-data">Нет данных для отображения</div>';
+        scale.innerHTML = '<span>0 оценок</span><span>0 оценок</span>';
+        return;
+    }
+
+    // Находим максимальное количество оценок для масштабирования
+    const maxTotal = Math.max(...filteredImages.map(img => {
+        const rating = ratings[img.id] || { likes: 0, dislikes: 0 };
+        return rating.likes + rating.dislikes;
+    }), 1);
+
+    // Обновляем шкалу
+    document.getElementById('maxRatings').textContent = `${maxTotal} оценок`;
+
+    // Сортируем изображения
+    const sortedImages = sortImages(filteredImages);
+
+    chart.innerHTML = sortedImages.map(img => {
+        const rating = ratings[img.id] || { likes: 0, dislikes: 0 };
+        const total = rating.likes + rating.dislikes;
+        
+        // Расчет ширины на основе общего количества оценок
+        const totalWidthPercent = total > 0 ? (total / maxTotal) * 100 : 5;
+        
+        // Расчет процентов для лайков/дизлайков внутри общей ширины
+        const likesPercent = total > 0 ? (rating.likes / total) * 100 : 0;
+        const dislikesPercent = total > 0 ? (rating.dislikes / total) * 100 : 0;
+        
+        const ratio = total > 0 ? (rating.likes / total * 100).toFixed(0) : 0;
+
+        return `
+            <div class="chart-item" onclick="editImage('${img.id}')">
+                <img src="${img.url}" alt="${img.title}" class="chart-image"
+                        onerror="this.src='https://via.placeholder.com/60x60?text=🚫'">
+                <div class="chart-info">
+                    <div class="chart-title">${img.title}</div>
+                    <div class="chart-tags">${img.tags ? img.tags.join(', ') : 'нет тегов'}</div>
+                    <div class="chart-total">Всего: ${total} оцен.</div>
+                </div>
+                <div class="chart-bar-container">
+                    <div class="chart-bar" style="width: ${totalWidthPercent}%">
+                        <div class="likes-bar" style="width: ${likesPercent}%"></div>
+                        <div class="dislikes-bar" style="width: ${dislikesPercent}%"></div>
+                    </div>
+                </div>
+                <div class="chart-numbers">
+                    <div class="likes-count">👍 ${rating.likes}</div>
+                    <div class="dislikes-count">👎 ${rating.dislikes}</div>
+                    <div class="rating-ratio">${ratio}%</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function sortImages(imagesArray) {
+    return imagesArray.sort((a, b) => {
+        const ratingA = ratings[a.id] || { likes: 0, dislikes: 0 };
+        const ratingB = ratings[b.id] || { likes: 0, dislikes: 0 };
+        
+        const totalA = ratingA.likes + ratingA.dislikes;
+        const totalB = ratingB.likes + ratingB.dislikes;
+        const ratioA = totalA > 0 ? ratingA.likes / totalA : 0;
+        const ratioB = totalB > 0 ? ratingB.likes / totalB : 0;
+
+        let valueA, valueB;
+
+        switch (sortBy) {
+            case 'likes':
+                valueA = ratingA.likes;
+                valueB = ratingB.likes;
+                break;
+            case 'dislikes':
+                valueA = ratingA.dislikes;
+                valueB = ratingB.dislikes;
+                break;
+            case 'ratio':
+                valueA = ratioA;
+                valueB = ratioB;
+                break;
+            case 'title':
+                valueA = a.title.toLowerCase();
+                valueB = b.title.toLowerCase();
+                break;
+            case 'totalRatings':
+                valueA = totalA;
+                valueB = totalB;
+                break;
+            case 'total':
+            default:
+                valueA = ratingA.likes - ratingA.dislikes;
+                valueB = ratingB.likes - ratingB.dislikes;
+        }
+
+        if (typeof valueA === 'string') {
+            return sortOrder === 'desc' ? valueB.localeCompare(valueA) : valueA.localeCompare(valueB);
+        } else {
+            return sortOrder === 'desc' ? valueB - valueA : valueA - valueB;
+        }
+    });
+}
+
+function toggleSortOrder() {
+    const btn = document.getElementById('sortOrderBtn');
+    sortOrder = sortOrder === 'desc' ? 'asc' : 'desc';
+    btn.textContent = sortOrder === 'desc' ? '🔽 Убывание' : '🔼 Возрастание';
+    btn.classList.toggle('active');
+    renderRatingsChart();
+}
+
+function refreshChart() {
+    renderTagFilter();
+    renderRatingsChart();
+}
+
+// Остальные функции остаются без изменений
 function showUrlInput() {
     document.getElementById('urlInput').style.display = 'block';
     document.getElementById('fileInput').style.display = 'none';
