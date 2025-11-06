@@ -8,11 +8,20 @@ let sortOrder = 'desc';
 let chartFilterTag = 'all';
 let isChartCollapsed = false;
 
+// Переменные для управления логами
+let allLogs = [];
+let filteredLogs = [];
+let currentLogsPage = 1;
+const logsPerPage = 20;
+let logsSortField = 'timestamp';
+let logsSortOrder = 'desc';
+
 // Инициализация
 document.addEventListener('DOMContentLoaded', function() {
     loadImages();
     setupEventListeners();
     initChartState();
+    initLogsSection();
 });
 
 function setupEventListeners() {
@@ -266,7 +275,6 @@ function refreshChart() {
     renderRatingsChart();
 }
 
-// Остальные функции остаются без изменений
 function showUrlInput() {
     document.getElementById('urlInput').style.display = 'block';
     document.getElementById('fileInput').style.display = 'none';
@@ -497,4 +505,301 @@ function showAlert(message, type) {
     setTimeout(() => {
         alert.style.display = 'none';
     }, 3000);
+}
+
+// ==================== ФУНКЦИИ ДЛЯ РАБОТЫ С ЛОГАМИ ====================
+
+function initLogsSection() {
+    loadLogs();
+    setupLogsEventListeners();
+    renderLogsTable();
+}
+
+function setupLogsEventListeners() {
+    // Фильтры логов
+    document.getElementById('logActionFilter').addEventListener('change', filterLogs);
+    document.getElementById('logDateFilter').addEventListener('change', filterLogs);
+    
+    // Пагинация логов
+    document.getElementById('logsPrevPage').addEventListener('click', () => {
+        if (currentLogsPage > 1) {
+            currentLogsPage--;
+            renderLogsTable();
+        }
+    });
+    
+    document.getElementById('logsNextPage').addEventListener('click', () => {
+        const totalPages = Math.ceil(filteredLogs.length / logsPerPage);
+        if (currentLogsPage < totalPages) {
+            currentLogsPage++;
+            renderLogsTable();
+        }
+    });
+}
+
+function loadLogs() {
+    try {
+        allLogs = JSON.parse(localStorage.getItem('userLogs')) || [];
+        filterLogs();
+    } catch (error) {
+        console.error('Ошибка загрузки логов:', error);
+        allLogs = [];
+        filteredLogs = [];
+    }
+}
+
+function filterLogs() {
+    const actionFilter = document.getElementById('logActionFilter').value;
+    const dateFilter = document.getElementById('logDateFilter').value;
+    
+    filteredLogs = allLogs.filter(log => {
+        // Фильтр по действию
+        if (actionFilter !== 'all' && log.action !== actionFilter) {
+            return false;
+        }
+        
+        // Фильтр по дате
+        if (dateFilter !== 'all') {
+            const logDate = new Date(log.timestamp);
+            const now = new Date();
+            
+            switch (dateFilter) {
+                case 'today':
+                    return logDate.toDateString() === now.toDateString();
+                case 'week':
+                    const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+                    return logDate >= weekAgo;
+                case 'month':
+                    const monthAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
+                    return logDate >= monthAgo;
+            }
+        }
+        
+        return true;
+    });
+    
+    // Сортировка
+    sortLogs(logsSortField);
+    
+    currentLogsPage = 1;
+    updateLogsStats();
+    renderLogsTable();
+}
+
+function sortLogs(field) {
+    if (logsSortField === field) {
+        logsSortOrder = logsSortOrder === 'asc' ? 'desc' : 'asc';
+    } else {
+        logsSortField = field;
+        logsSortOrder = 'desc';
+    }
+    
+    filteredLogs.sort((a, b) => {
+        let aValue = a[field];
+        let bValue = b[field];
+        
+        if (field === 'timestamp') {
+            aValue = new Date(aValue);
+            bValue = new Date(bValue);
+        }
+        
+        if (aValue < bValue) return logsSortOrder === 'asc' ? -1 : 1;
+        if (aValue > bValue) return logsSortOrder === 'asc' ? 1 : -1;
+        return 0;
+    });
+    
+    renderLogsTable();
+}
+
+function renderLogsTable() {
+    const tbody = document.getElementById('logsTableBody');
+    const pageInfo = document.getElementById('logsPageInfo');
+    
+    if (filteredLogs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="no-data">Нет данных для отображения</td></tr>';
+        pageInfo.textContent = 'Страница 1 из 1';
+        return;
+    }
+    
+    const startIndex = (currentLogsPage - 1) * logsPerPage;
+    const endIndex = startIndex + logsPerPage;
+    const pageLogs = filteredLogs.slice(startIndex, endIndex);
+    
+    tbody.innerHTML = pageLogs.map(log => {
+        const date = new Date(log.timestamp);
+        const dateString = date.toLocaleDateString('ru-RU');
+        const timeString = date.toLocaleTimeString('ru-RU');
+        
+        let actionText = getActionText(log.action);
+        let detailsText = formatDetails(log.details);
+        
+        return `
+            <tr>
+                <td>
+                    <div class="log-date">${dateString}</div>
+                    <div class="log-time">${timeString}</div>
+                </td>
+                <td>
+                    <span class="log-action ${log.action.toLowerCase()}">${actionText}</span>
+                </td>
+                <td class="log-details">${detailsText}</td>
+                <td>
+                    <div class="log-session" title="${log.sessionId}">
+                        ${log.sessionId.substring(0, 8)}...
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+    
+    const totalPages = Math.ceil(filteredLogs.length / logsPerPage);
+    pageInfo.textContent = `Страница ${currentLogsPage} из ${totalPages}`;
+    
+    // Обновляем состояние кнопок пагинации
+    document.getElementById('logsPrevPage').disabled = currentLogsPage === 1;
+    document.getElementById('logsNextPage').disabled = currentLogsPage === totalPages;
+}
+
+function getActionText(action) {
+    const actions = {
+        'PAGE_LOAD': '📄 Загрузка страницы',
+        'LIKE': '👍 Лайк',
+        'DISLIKE': '👎 Дизлайк',
+        'PAGE_CHANGE': '📖 Смена страницы',
+        'ITEMS_PER_PAGE_CHANGE': '🔢 Изменение количества',
+        'FILTER_CHANGE': '⚙️ Изменение фильтра',
+        'FILTER_RESET': '🔄 Сброс фильтра',
+        'GALLERY_REFRESH': '🔄 Обновление галереи'
+    };
+    
+    return actions[action] || action;
+}
+
+function formatDetails(details) {
+    if (!details || Object.keys(details).length === 0) {
+        return '<em>Нет деталей</em>';
+    }
+    
+    return Object.entries(details)
+        .map(([key, value]) => {
+            if (typeof value === 'object') {
+                return `<strong>${key}:</strong> ${JSON.stringify(value)}`;
+            }
+            return `<strong>${key}:</strong> ${value}`;
+        })
+        .join('<br>');
+}
+
+function updateLogsStats() {
+    const totalLogs = document.getElementById('totalLogs');
+    const uniqueSessions = document.getElementById('uniqueSessions');
+    const logsPeriod = document.getElementById('logsPeriod');
+    
+    totalLogs.textContent = filteredLogs.length;
+    
+    // Подсчет уникальных сессий
+    const sessionSet = new Set(filteredLogs.map(log => log.sessionId));
+    uniqueSessions.textContent = sessionSet.size;
+    
+    // Период данных
+    if (filteredLogs.length > 0) {
+        const firstDate = new Date(filteredLogs[filteredLogs.length - 1].timestamp);
+        const lastDate = new Date(filteredLogs[0].timestamp);
+        logsPeriod.textContent = `${firstDate.toLocaleDateString()} - ${lastDate.toLocaleDateString()}`;
+    } else {
+        logsPeriod.textContent = '-';
+    }
+}
+
+function exportLogs() {
+    const exportData = {
+        metadata: {
+            exportDate: new Date().toISOString(),
+            totalLogs: filteredLogs.length,
+            version: '1.0'
+        },
+        logs: filteredLogs
+    };
+    
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(dataBlob);
+    link.download = `user_logs_${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    
+    setTimeout(() => URL.revokeObjectURL(link.href), 100);
+}
+
+function clearLogs() {
+    if (confirm('Вы уверены, что хотите очистить все логи? Это действие нельзя отменить.')) {
+        localStorage.removeItem('userLogs');
+        allLogs = [];
+        filteredLogs = [];
+        renderLogsTable();
+        updateLogsStats();
+        showAlert('Логи успешно очищены', 'success');
+    }
+}
+
+function importLogs() {
+    document.getElementById('logsFileInput').click();
+}
+
+// Обработчик выбора файла для импорта
+document.getElementById('logsFileInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const importedData = JSON.parse(e.target.result);
+            const importedLogs = importedData.logs || [];
+            
+            if (!Array.isArray(importedLogs)) {
+                throw new Error('Неверный формат файла');
+            }
+            
+            // Добавляем импортированные логи
+            allLogs.unshift(...importedLogs);
+            
+            // Ограничиваем общее количество
+            if (allLogs.length > 2000) {
+                allLogs = allLogs.slice(0, 2000);
+            }
+            
+            // Сохраняем в localStorage
+            localStorage.setItem('userLogs', JSON.stringify(allLogs));
+            
+            // Обновляем отображение
+            filterLogs();
+            showAlert(`Успешно импортировано ${importedLogs.length} записей`, 'success');
+            
+        } catch (error) {
+            showAlert('Ошибка импорта логов: ' + error.message, 'error');
+        }
+    };
+    
+    reader.readAsText(file);
+    // Сбрасываем значение input для возможности повторного выбора того же файла
+    e.target.value = '';
+});
+
+function refreshLogs() {
+    loadLogs();
+    showAlert('Логи обновлены', 'success');
+}
+
+function toggleLogsSection() {
+    const content = document.getElementById('logsSectionContent');
+    const icon = document.getElementById('logsCollapseIcon');
+    
+    content.classList.toggle('collapsed');
+    icon.classList.toggle('collapsed');
+    
+    if (!content.classList.contains('collapsed')) {
+        refreshLogs();
+    }
 }

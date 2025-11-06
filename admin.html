@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Управление изображениями</title>
     <link rel="stylesheet" href="admin.css">
-
 </head>
 <body>
     <div class="container">
@@ -100,6 +99,84 @@
                 </div>
             </div>
 
+            <!-- Журнал действий пользователей -->
+            <div class="section">
+                <div class="section-header" onclick="toggleLogsSection()">
+                    <h2>📋 Журнал действий пользователей</h2>
+                    <span class="collapse-icon" id="logsCollapseIcon">▼</span>
+                </div>
+                
+                <div class="section-content" id="logsSectionContent">
+                    <!-- Элементы управления логами -->
+                    <div class="logs-controls">
+                        <div class="filter-group">
+                            <label for="logActionFilter">Действие:</label>
+                            <select id="logActionFilter" class="form-control">
+                                <option value="all">Все действия</option>
+                                <option value="PAGE_LOAD">Загрузка страницы</option>
+                                <option value="LIKE">Лайк</option>
+                                <option value="DISLIKE">Дизлайк</option>
+                                <option value="PAGE_CHANGE">Смена страницы</option>
+                                <option value="ITEMS_PER_PAGE_CHANGE">Изменение количества</option>
+                                <option value="FILTER_CHANGE">Изменение фильтра</option>
+                                <option value="FILTER_RESET">Сброс фильтра</option>
+                                <option value="GALLERY_REFRESH">Обновление галереи</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="logDateFilter">Период:</label>
+                            <select id="logDateFilter" class="form-control">
+                                <option value="all">За всё время</option>
+                                <option value="today">Сегодня</option>
+                                <option value="week">За неделю</option>
+                                <option value="month">За месяц</option>
+                            </select>
+                        </div>
+                        
+                        <div class="logs-actions">
+                            <button class="btn btn-primary" onclick="refreshLogs()">🔄 Обновить</button>
+                            <button class="btn btn-success" onclick="exportLogs()">📥 Экспорт в JSON</button>
+                            <button class="btn btn-danger" onclick="clearLogs()">🗑️ Очистить логи</button>
+                            <button class="btn btn-info" onclick="importLogs()">📤 Импорт логов</button>
+                        </div>
+                    </div>
+
+                    <!-- Статистика логов -->
+                    <div class="logs-stats" id="logsStats">
+                        <div class="stat-item">Всего записей: <span id="totalLogs">0</span></div>
+                        <div class="stat-item">Уникальных сессий: <span id="uniqueSessions">0</span></div>
+                        <div class="stat-item">Период: <span id="logsPeriod">-</span></div>
+                    </div>
+
+                    <!-- Таблица логов -->
+                    <div class="table-container">
+                        <table class="logs-table">
+                            <thead>
+                                <tr>
+                                    <th onclick="sortLogs('timestamp')">Дата и время ⌵</th>
+                                    <th onclick="sortLogs('action')">Действие ⌵</th>
+                                    <th onclick="sortLogs('details')">Детали ⌵</th>
+                                    <th onclick="sortLogs('sessionId')">Сессия ⌵</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logsTableBody">
+                                <tr>
+                                    <td colspan="4" class="no-data">Загрузка логов...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Пагинация логов -->
+                    <div class="logs-pagination">
+                        <button id="logsPrevPage" class="btn btn-outline">← Назад</button>
+                        <span id="logsPageInfo">Страница 1 из 1</span>
+                        <button id="logsNextPage" class="btn btn-outline">Вперёд →</button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Уведомления -->
             <div class="alert" id="alertMessage"></div>
 
@@ -172,6 +249,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Скрытый input для импорта файлов -->
+    <input type="file" id="logsFileInput" accept=".json" style="display: none;">
 
     <script src="admin.js"></script>
 </body>
